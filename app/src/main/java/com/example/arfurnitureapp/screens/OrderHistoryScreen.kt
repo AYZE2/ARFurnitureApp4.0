@@ -1,5 +1,7 @@
 package com.example.arfurnitureapp.screens
 
+import com.example.arfurnitureapp.utils.OrderStatusBadge
+import com.example.arfurnitureapp.utils.capitalize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -361,64 +363,7 @@ fun OrderHistoryItem(
     }
 }
 
-@Composable
-fun OrderStatusBadge(status: OrderStatus) {
-    val (backgroundColor, contentColor, icon) = when (status) {
-        OrderStatus.PENDING -> Triple(
-            MaterialTheme.colorScheme.tertiaryContainer,
-            MaterialTheme.colorScheme.onTertiaryContainer,
-            Icons.Default.HourglassEmpty
-        )
-        OrderStatus.PROCESSING -> Triple(
-            MaterialTheme.colorScheme.primaryContainer,
-            MaterialTheme.colorScheme.onPrimaryContainer,
-            Icons.Default.Settings
-        )
-        OrderStatus.SHIPPED -> Triple(
-            MaterialTheme.colorScheme.secondaryContainer,
-            MaterialTheme.colorScheme.onSecondaryContainer,
-            Icons.Default.LocalShipping
-        )
-        OrderStatus.DELIVERED -> Triple(
-            MaterialTheme.colorScheme.primaryContainer,
-            MaterialTheme.colorScheme.onPrimaryContainer,
-            Icons.Default.Check
-        )
-        OrderStatus.CANCELLED -> Triple(
-            MaterialTheme.colorScheme.errorContainer,
-            MaterialTheme.colorScheme.onErrorContainer,
-            Icons.Default.Cancel
-        )
-        OrderStatus.RETURNED -> Triple(
-            MaterialTheme.colorScheme.errorContainer,
-            MaterialTheme.colorScheme.onErrorContainer,
-            Icons.Default.AssignmentReturn
-        )
-    }
 
-    Surface(
-        shape = MaterialTheme.shapes.small,
-        color = backgroundColor,
-        contentColor = contentColor
-    ) {
-        Row(
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                icon,
-                contentDescription = null,
-                modifier = Modifier.size(16.dp)
-            )
-            Spacer(modifier = Modifier.width(4.dp))
-            Text(
-                text = status.name.capitalize(),
-                style = MaterialTheme.typography.bodySmall,
-                fontWeight = FontWeight.Medium
-            )
-        }
-    }
-}
 
 // Helper function to format date
 private fun formatDate(date: Date): String {
@@ -426,9 +371,3 @@ private fun formatDate(date: Date): String {
     return formatter.format(date)
 }
 
-// Helper extension function to capitalize strings
-private fun String.capitalize(): String {
-    return this.lowercase().replaceFirstChar {
-        if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString()
-    }
-}

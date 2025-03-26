@@ -1,8 +1,10 @@
 package com.example.arfurnitureapp.screens
 
+
+import com.example.arfurnitureapp.utils.OrderStatusBadge
+import com.example.arfurnitureapp.utils.capitalize
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -162,11 +164,13 @@ fun OrderDetailScreen(
 
                             Spacer(modifier = Modifier.height(16.dp))
 
-                            selectedOrder!!.items.forEach { item ->
+                            selectedOrder!!.items.forEachIndexed { index, item ->
                                 OrderItemRow(item = item)
-                                Divider(
-                                    modifier = Modifier.padding(vertical = 12.dp)
-                                )
+                                if (index < selectedOrder!!.items.size - 1) {
+                                    Divider(
+                                        modifier = Modifier.padding(vertical = 12.dp)
+                                    )
+                                }
                             }
 
                             // Order Summary
@@ -337,6 +341,75 @@ fun OrderDetailScreen(
                     Text("KEEP ORDER")
                 }
             }
+        )
+    }
+}
+
+@Composable
+fun OrderItemRow(item: com.example.arfurnitureapp.model.OrderItem) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        // Product image (if available) or placeholder
+        Box(
+            modifier = Modifier
+                .size(60.dp)
+                .clip(RoundedCornerShape(8.dp))
+                .background(MaterialTheme.colorScheme.surfaceVariant)
+        ) {
+            val imageResId = item.imageUrl.toIntOrNull()
+            if (imageResId != null) {
+                Image(
+                    painter = painterResource(id = imageResId),
+                    contentDescription = item.productName,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize()
+                )
+            } else {
+                PlaceholderForFailedImage(productName = item.productName)
+            }
+        }
+
+        // Product details
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .padding(horizontal = 12.dp)
+        ) {
+            Text(
+                text = item.productName,
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.Bold
+            )
+
+            Text(
+                text = "Qty: ${item.quantity}",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+
+        // Price
+        Text(
+            text = "£${String.format("%.2f", item.totalPrice)}",
+            style = MaterialTheme.typography.bodyLarge,
+            fontWeight = FontWeight.Bold
+        )
+    }
+}
+
+@Composable
+fun PlaceholderForFailedImage(productName: String) {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = productName.firstOrNull()?.uppercase() ?: "P",
+            style = MaterialTheme.typography.titleLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
     }
 }
@@ -518,86 +591,6 @@ fun OrderProgressIndicator(status: OrderStatus) {
 }
 
 @Composable
-fun OrderItemRow(item: com.example.arfurnitureapp.model.OrderItem) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        // Product image (if available) or placeholder
-        Box(
-            modifier = Modifier
-                .size(60.dp)
-                .clip(RoundedCornerShape(8.dp))
-                .background(MaterialTheme.colorScheme.surfaceVariant)
-        ) {
-            try {
-                // Try to load image if resource ID is available
-                val imageResId = item.imageUrl.toIntOrNull()
-                if (imageResId != null) {
-                    Image(
-                        painter = painterResource(id = imageResId),
-                        contentDescription = item.productName,
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier.fillMaxSize()
-                    )
-                } else {
-                    // Show first letter of product name as placeholder
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = item.productName.firstOrNull()?.uppercase() ?: "P",
-                            style = MaterialTheme.typography.titleLarge,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-            } catch (e: Exception) {
-                // Show first letter of product name as placeholder on error
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = item.productName.firstOrNull()?.uppercase() ?: "P",
-                        style = MaterialTheme.typography.titleLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
-        }
-
-        // Product details
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .padding(horizontal = 12.dp)
-        ) {
-            Text(
-                text = item.productName,
-                style = MaterialTheme.typography.bodyLarge,
-                fontWeight = FontWeight.Bold
-            )
-
-            Text(
-                text = "Qty: ${item.quantity}",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-
-        // Price
-        Text(
-            text = "£${String.format("%.2f", item.totalPrice)}",
-            style = MaterialTheme.typography.bodyLarge,
-            fontWeight = FontWeight.Bold
-        )
-    }
-}
-
-@Composable
 fun OrderSummary(order: Order) {
     Column(
         modifier = Modifier.fillMaxWidth()
@@ -671,74 +664,12 @@ fun OrderSummaryRow(
 }
 
 @Composable
-fun OrderStatusBadge(status: OrderStatus) {
-    val (backgroundColor, contentColor, icon) = when (status) {
-        OrderStatus.PENDING -> Triple(
-            MaterialTheme.colorScheme.tertiaryContainer,
-            MaterialTheme.colorScheme.onTertiaryContainer,
-            Icons.Default.HourglassEmpty
-        )
-        OrderStatus.PROCESSING -> Triple(
-            MaterialTheme.colorScheme.primaryContainer,
-            MaterialTheme.colorScheme.onPrimaryContainer,
-            Icons.Default.Settings
-        )
-        OrderStatus.SHIPPED -> Triple(
-            MaterialTheme.colorScheme.secondaryContainer,
-            MaterialTheme.colorScheme.onSecondaryContainer,
-            Icons.Default.LocalShipping
-        )
-        OrderStatus.DELIVERED -> Triple(
-            MaterialTheme.colorScheme.primaryContainer,
-            MaterialTheme.colorScheme.onPrimaryContainer,
-            Icons.Default.Check
-        )
-        OrderStatus.CANCELLED -> Triple(
-            MaterialTheme.colorScheme.errorContainer,
-            MaterialTheme.colorScheme.onErrorContainer,
-            Icons.Default.Cancel
-        )
-        OrderStatus.RETURNED -> Triple(
-            MaterialTheme.colorScheme.errorContainer,
-            MaterialTheme.colorScheme.onErrorContainer,
-            Icons.Default.AssignmentReturn
-        )
-    }
 
-    Surface(
-        shape = MaterialTheme.shapes.small,
-        color = backgroundColor,
-        contentColor = contentColor
-    ) {
-        Row(
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                icon,
-                contentDescription = null,
-                modifier = Modifier.size(16.dp)
-            )
-            Spacer(modifier = Modifier.width(4.dp))
-            Text(
-                text = status.name.capitalize(),
-                style = MaterialTheme.typography.bodySmall,
-                fontWeight = FontWeight.Medium
-            )
-        }
-    }
-}
 
-// Helper function to format date
-private fun formatDate(date: Date?): String {
+// Helper function for date formatting
+fun formatDate(date: Date?): String {
     if (date == null) return "N/A"
     val formatter = SimpleDateFormat("dd MMM yyyy", Locale.UK)
     return formatter.format(date)
 }
 
-// Helper extension function to capitalize strings
-private fun String.capitalize(): String {
-    return this.lowercase().replaceFirstChar {
-        if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString()
-    }
-}

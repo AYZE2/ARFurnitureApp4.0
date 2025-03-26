@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalMaterial3Api::class)
+
 package com.example.arfurnitureapp.screens
 
 import androidx.compose.foundation.Image
@@ -201,14 +203,17 @@ fun PaymentMethodManagementScreen(
                     )
                 } else {
                     // Updating existing payment method (only certain fields can be updated)
-                    paymentMethodViewModel.updatePaymentMethod(
-                        paymentMethodId = editingPaymentMethod.id,
-                        cardHolderName = newPaymentMethod.cardHolderName,
-                        expiryDate = newPaymentMethod.expiryDate,
-                        cardType = newPaymentMethod.cardType,
-                        billingAddress = newPaymentMethod.billingAddress,
-                        isDefault = newPaymentMethod.isDefault
-                    )
+                    val existingPaymentMethod = editingPaymentMethod
+                    if (existingPaymentMethod != null) {
+                        paymentMethodViewModel.updatePaymentMethod(
+                            paymentMethodId = existingPaymentMethod.id,
+                            cardHolderName = newPaymentMethod.cardHolderName,
+                            expiryDate = newPaymentMethod.expiryDate,
+                            cardType = newPaymentMethod.cardType,
+                            billingAddress = newPaymentMethod.billingAddress,
+                            isDefault = newPaymentMethod.isDefault
+                        )
+                    }
                 }
                 showPaymentDialog = false
             }
@@ -291,7 +296,7 @@ fun PaymentMethodCard(
                 paymentMethod.billingAddress?.let { address ->
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = "Billing: ${address.city}, ${address.state}",
+                        text = "Billing: ${address.town}, ${address.county}",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -335,6 +340,7 @@ fun PaymentMethodCard(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PaymentMethodDialog(
     paymentMethod: PaymentMethod?,
@@ -534,7 +540,7 @@ fun PaymentMethodDialog(
                                 )
 
                                 Text(
-                                    text = "${address.city}, ${address.state} ${address.zipCode}",
+                                    text = "${address.town}, ${address.county} ${address.postcode}",
                                     style = MaterialTheme.typography.bodyMedium
                                 )
                             }
